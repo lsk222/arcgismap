@@ -1,0 +1,91 @@
+## index2.html
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>我的地图页面</title>
+    <!-- <link rel="stylesheet" href="http://127.0.0.1/arcgis_js_api/4.15/esri/css/main.css"> -->
+    <link
+      rel="stylesheet"
+      href="http://127.0.0.1/arcgis_js_api/4.15/esri/themes/dark-blue/main.css"
+    />
+    <link rel="stylesheet" href="css/index.css" />
+    <script src="http://127.0.0.1/arcgis_js_api/4.15/init.js"></script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+    <script>
+      require([
+        'esri/Map',
+        'esri/views/MapView',
+        'esri/layers/MapImageLayer',
+        'esri/widgets/LayerList',
+        'esri/widgets/Home',
+        'esri/widgets/BasemapToggle',
+      ], function (
+        Map,
+        MapView,
+        MapImageLayer,
+        LayerList,
+        Home,
+        BasemapToggle
+      ) {
+        // var layer = new MapImageLayer({
+        //   url: 'http://localhost:6080/arcgis/rest/services/buildings/MapServer',
+        //   title: '全球国家',
+        //   listMode: 'hide-children',
+        //   visible: false,
+        // });
+
+        // var layer2 = new MapImageLayer({
+        //   url: 'http://localhost:6080/arcgis/rest/services/20201130/buildings_purple/MapServer',
+        //   title: '全球人口密度',
+        //   listMode: 'hide',
+        // });
+
+        var map = new Map({
+          basemap: 'hybrid',
+          // layers: [layer, layer2],
+        });
+
+        var view = new MapView({
+          container: 'viewDiv',
+          map: map,
+          center: [111.65, 40.82],
+          zoom: 13,
+          // rotation: 45,
+          ui: {
+            components: ['zoom', 'compass'],
+          },
+        });
+
+        var layerList = new LayerList({
+          view: view,
+        });
+
+        view.ui.add(layerList, 'bottom-right');
+
+        var home = new Home({
+          view: view,
+        });
+
+        view.ui.add(home, 'top-left');
+
+        var basemapToggle1 = new BasemapToggle({
+          view: view,
+          nextBasemap: 'osm',
+        });
+
+        var basemapToggle2 = new BasemapToggle({
+          view: view,
+          nextBasemap: 'topo',
+        });
+
+        view.ui.add([basemapToggle1, basemapToggle2], 'top-right');
+      });
+    </script>
+  </body>
+</html>

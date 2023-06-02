@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ArcGIS Maps SDK for JavaScript Tutorials: Add a feature layer</title>
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.26/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.26/"></script>
+  </head>
+  <body>
+    <script>
+      require([
+        'esri/Map',
+        'esri/views/MapView',
+        'esri/layers/FeatureLayer',
+        'esri/widgets/Legend',
+        'esri/widgets/Expand',
+        'esri/widgets/TimeSlider',
+        'esri/renderers/SimpleRenderer',
+        'esri/symbols/SimpleLineSymbol',
+        'esri/symbols/ArrowSymbol3D',
+        'esri/symbols/PathSymbol3DLayer',
+        'dojo/domReady!',
+      ], function (
+        Map,
+        MapView,
+        FeatureLayer,
+        Legend,
+        Expand,
+        TimeSlider,
+        SimpleRenderer,
+        SimpleLineSymbol,
+        ArrowSymbol3D,
+        PathSymbol3DLayer
+      ) {
+        var map = new Map({
+          basemap: 'topo-vector',
+        });
+        var view = new MapView({
+          container: 'viewDiv',
+          map: map,
+          center: [-95, 38],
+          zoom: 4,
+        });
+
+        var renderer = new SimpleRenderer({
+          symbol: new SimpleLineSymbol({
+            color: [255, 255, 255, 0.5],
+            width: 1,
+          }),
+        });
+
+        var arrowSymbol = new ArrowSymbol3D({
+          size: 6,
+          color: 'white',
+          outline: {
+            color: [0, 0, 0, 0.5],
+            size: 1,
+          },
+        });
+
+        var layer = new FeatureLayer({
+          url: 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer/1',
+          outFields: ['*'],
+          renderer: renderer,
+          minScale: 4000000,
+        });
+
+        var legend = new Legend({
+          view: view,
+        });
+
+        var legendExpand = new Expand({
+          view: view,
+          content: legend,
+        });
+
+        view.ui.add(legendExpand, 'top-right');
+
+        var timeSlider = new TimeSlider({
+          container: 'timeSliderDiv',
+          view: view,
+          fullTimeExtent: {
+            start: new Date(2015, 0, 1),
+            end: new Date(2015, 11, 31),
+          },
+          stops: {
+            interval: {
+              value: 1,
+              unit: 'months',
+            },
+          },
+        });
+
+        view.ui.add(timeSlider, 'bottom');
+
+        view.whenLayerView(layer).then(function (layerView) {
+          timeSlider.watch('timeExtent', function (timeExtent) {
+            layerView.filter = {
+              timeExtent: timeExtent,
+            };
+          });
+          layerView.effect = {
+            filter: {
+              timeExtent: timeSlider.timeExtent,
+            },
+            maxIntensity: 50,
+            minIntensity: 0,
+            zoomScale: 5000000,
+            legendOptions: {
+              title: 'Number of flights',
+              unit: 'flights',
+            },
+            renderer: {
+              type: 'simple',
+              symbol: arrowSymbol,
+            },
+          };
+        });
+      });
+    </script>
+  </body>
+</html>

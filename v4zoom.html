@@ -1,0 +1,202 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>
+      Intro to graphics | Sample | ArcGIS Maps SDK for JavaScript 4.26
+    </title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.26/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.26/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <script>
+      let mapView = null;
+      let mapPoint = null;
+      require([
+        'esri/Map',
+        'esri/views/MapView',
+        'esri/Graphic',
+        'esri/geometry/Point',
+      ], (Map, MapView, Graphic, Point) => {
+        const map = new Map({
+          basemap: 'hybrid',
+        });
+
+        const view = new MapView({
+          center: [-80, 35],
+          container: 'viewDiv',
+          map: map,
+          zoom: 3,
+        });
+
+        /*************************
+         * Create a point graphic
+         *************************/
+
+        // First create a point geometry (this is the location of the Titanic)
+        const point = {
+          type: 'point', // autocasts as new Point()
+          longitude: -49.97,
+          latitude: 41.73,
+        };
+
+        // Create a symbol for drawing the point
+        const markerSymbol = {
+          type: 'simple-marker', // autocasts as new SimpleMarkerSymbol()
+          color: [226, 119, 40],
+          outline: {
+            // autocasts as new SimpleLineSymbol()
+            color: [255, 255, 255],
+            width: 2,
+          },
+        };
+
+        // Create a graphic and add the geometry and symbol to it
+        const pointGraphic = new Graphic({
+          geometry: point,
+          symbol: markerSymbol,
+        });
+
+        /****************************
+         * Create a polyline graphic
+         ****************************/
+
+        // First create a line geometry (this is the Keystone pipeline)
+        const polyline = {
+          type: 'polyline', // autocasts as new Polyline()
+          paths: [
+            [-111.3, 52.68],
+            [-98, 49.5],
+            [-93.94, 29.89],
+          ],
+        };
+
+        // Create a symbol for drawing the line
+        const lineSymbol = {
+          type: 'simple-line', // autocasts as SimpleLineSymbol()
+          color: [226, 119, 40],
+          width: 4,
+        };
+
+        // Create an object for storing attributes related to the line
+        const lineAtt = {
+          Name: 'Keystone Pipeline',
+          Owner: 'TransCanada',
+          Length: '3,456 km',
+        };
+
+        /*******************************************
+         * Create a new graphic and add the geometry,
+         * symbol, and attributes to it. You may also
+         * add a simple PopupTemplate to the graphic.
+         * This allows users to view the graphic's
+         * attributes when it is clicked.
+         ******************************************/
+        const polylineGraphic = new Graphic({
+          geometry: polyline,
+          symbol: lineSymbol,
+          attributes: lineAtt,
+          popupTemplate: {
+            // autocasts as new PopupTemplate()
+            title: '{Name}',
+            content: [
+              {
+                type: 'fields',
+                fieldInfos: [
+                  {
+                    fieldName: 'Name',
+                  },
+                  {
+                    fieldName: 'Owner',
+                  },
+                  {
+                    fieldName: 'Length',
+                  },
+                ],
+              },
+            ],
+          },
+        });
+
+        /***************************
+         * Create a polygon graphic
+         ***************************/
+
+        // Create a polygon geometry
+        const polygon = {
+          type: 'polygon', // autocasts as new Polygon()
+          rings: [
+            [-64.78, 32.3],
+            [-66.07, 18.45],
+            [-80.21, 25.78],
+            [-64.78, 32.3],
+          ],
+        };
+
+        // Create a symbol for rendering the graphic
+        const fillSymbol = {
+          type: 'simple-fill', // autocasts as new SimpleFillSymbol()
+          color: [227, 139, 79, 0.8],
+          outline: {
+            // autocasts as new SimpleLineSymbol()
+            color: [255, 255, 255],
+            width: 1,
+          },
+        };
+
+        // Add the geometry and symbol to a new graphic
+        const polygonGraphic = new Graphic({
+          geometry: polygon,
+          symbol: fillSymbol,
+        });
+
+        // Add the graphics to the view's graphics layer
+        view.graphics.addMany([pointGraphic, polylineGraphic, polygonGraphic]);
+
+        let mapPoint = new Point({
+          longitude: -49.97,
+          latitude: 41.73,
+        });
+        setTimeout(() => {
+          view.goTo({
+            // 看向一个可视区域 主要参数是geometry 或者 extent
+            target: mapPoint,
+            center: [-49.97, 41.73],
+            // 将摄像头移动到一个点上面
+            // 同上 用上面的center就行了
+            position: [-49.97, 41.73],
+            // 这个是控制摄像头的水平方向
+            heading: 0,
+            // 这个是控制摄像头的垂直朝向
+            tilt: 90,
+            // 地图层级高度 一般最大是20  最小0   20的时候就已经贴着地面了几乎
+            zoom: 10,
+            // 焦距这个一般都不设置 直接使用target就好了， 一定要理解的话 这个就相当于焦距 也就是说 摄像头的位置设置焦距
+            fov: 0,
+          });
+        }, 3000);
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>

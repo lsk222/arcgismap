@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      function hexToRgb(hexStr) {
+        //十六进制颜色值的正则表达式
+        let reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
+        let sColor = hexStr.toLowerCase();
+        if (sColor && reg.test(sColor)) {
+          if (sColor.length === 4) {
+            let sColorNew = '#';
+            for (let i = 1; i < 4; i += 1) {
+              sColorNew += sColor
+                .slice(i, i + 1)
+                .concat(sColor.slice(i, i + 1));
+            }
+            sColor = sColorNew;
+          }
+          //处理六位的颜色值f
+          let sColorChange = [];
+          for (let i = 1; i < 7; i += 2) {
+            sColorChange.push(parseInt(`0x${sColor.slice(i, i + 2)}`));
+          }
+          let rgbText = `rgb(${sColorChange.join(',')})`;
+          return rgbText;
+        } else {
+          return sColor;
+        }
+      }
+
+      const res = hexToRgb('#4189AF'); //rgb(0,136,240)
+      console.log('res--->', res);
+    </script>
+  </body>
+</html>

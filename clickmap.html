@@ -1,0 +1,75 @@
+1 <!DOCTYPE html> 2
+<html>
+  3
+  <head>
+    4
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    5
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1,user-scalable=no"
+    />
+    6
+    <title>Test Map</title>
+    7
+    <title>
+      ArcGIS Maps SDK for JavaScript Tutorials: Add a point, line, and polygon
+    </title>
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.26/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.26/"></script>
+
+    <script>
+      var myMap;
+      require([
+        'esri/layers/ArcGISTiledMapServiceLayer',
+        'esri/symbols/SimpleMarkerSymbol',
+        'esri/map',
+        'dojo/on',
+        'esri/graphic',
+        'esri/geometry/Point',
+        'dojo/domReady!',
+      ], function (TileLayer, SimpleMarkerSymbol, Map, on, Graphic, Point) {
+        var layer = new TileLayer(
+          'https://www.seanpc.com/ags/rest/services/WorldBaseMap/MapServer'
+        );
+        myMap = new Map('ui-map-view', {
+          center: [-111.87, 40.57],
+        });
+        myMap.addLayer(layer); //地图鼠标点击响应事件
+        on(myMap, 'click', function (e) {
+          alert('map clicked');
+        });
+
+        myMap.on('load', function () {
+          //图形鼠标点击响应事件
+          myMap.graphics.on('click', function (e) {
+            alert('graphic clicked');
+            e.stopPropagation();
+          });
+          var g = new Graphic();
+          g.setGeometry(new Point([-111.87, 40.57]));
+          var simpleMarkerSymbol = new SimpleMarkerSymbol();
+          g.setSymbol(simpleMarkerSymbol);
+          myMap.graphics.add(g);
+        });
+      });
+    </script>
+  </head>
+
+  <body class="claro">
+    <div id="ui-map-view"></div>
+  </body>
+</html>

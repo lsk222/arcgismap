@@ -1,0 +1,438 @@
+<!--
+
+To run this demo, you need to replace 'YOUR_API_KEY' with an API key from the ArcGIS Developers dashboard.
+
+Sign up for a free account and get an API key.
+
+https://developers.arcgis.com/documentation/mapping-apis-and-services/get-started/
+
+-->
+
+<html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <meta
+        name="viewport"
+        content="initial-scale=1, maximum-scale=1, user-scalable=no"
+      />
+      <title>v4- point-line-polygon</title>
+      <style>
+        html,
+        body,
+        #viewDiv {
+          padding: 0;
+          margin: 0;
+          height: 100%;
+          width: 100%;
+        }
+        .esri-popup__main-container {
+          width: fit-content;
+        }
+        .esri-popup--shadow {
+          box-shadow: none !important;
+        }
+        .esri-popup__main-container {
+          width: fit-content !important;
+          background-color: transparent !important;
+        }
+        .esri-popup__header {
+          visibility: hidden !important;
+          height: 0;
+          width: 0;
+          /* display: none !important; */
+        }
+        .esri-feature-content > div {
+          width: fit-content;
+        }
+        .esri-popup__footer {
+          visibility: hidden !important;
+          height: 0;
+          width: 0;
+          /* display: none !important; */
+        }
+        p,
+        span {
+          padding: 0;
+          margin: 0;
+          width: 0;
+          display: inline;
+        }
+        .esri-popup__pointer {
+          visibility: hidden !important;
+          height: 0;
+          width: 0;
+          /* display: none !important; */
+        }
+        .esri-popup__content {
+          padding: 0 !important;
+          margin: 0 !important;
+          width: fit-content !important;
+          background-color: rgba(43, 160, 49, 0.1) !important;
+        }
+        .esri-widget {
+          padding: 0 !important;
+          background-color: rgba(85, 15, 197, 0.1) !important;
+        }
+      </style>
+      <script src="https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+      <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+      <script src="./data/heatmap.js"></script>
+      <link
+        rel="stylesheet"
+        href="https://js.arcgis.com/4.18/esri/themes/light/main.css"
+      />
+      <script src="https://js.arcgis.com/4.18/"></script>
+
+      <script>
+        let isHitTest = false;
+        const mapKey =
+          'AAPKf408f305d8e344aabadae3a285ade7cdZtjqhiJ9CXaLYfod0fBkDzgNxe7ZPHCr-OVBKprkZy9NMXzaoLyxbrR-d11MbjOb';
+        require([
+          'esri/config',
+          'esri/Map',
+          'esri/views/MapView',
+          'esri/geometry/Point',
+          'esri/geometry/Circle',
+          'esri/Graphic',
+          'esri/layers/GraphicsLayer',
+          'esri/layers/FeatureLayer',
+          'esri/renderers/HeatmapRenderer',
+          'esri/widgets/Search',
+        ], (
+          esriConfig,
+          Map,
+          MapView,
+          Point,
+          Circle,
+          Graphic,
+          GraphicsLayer,
+          FeatureLayer,
+          HeatmapRenderer,
+          Search
+        ) => {
+          esriConfig.apiKey = mapKey;
+          const map = new Map({
+            basemap: 'arcgis-topographic', //Basemap layer service
+          });
+
+          // var featureLayer = new FeatureLayer({
+          //   source: features, //点数据集
+          //   title: '热力图',
+          //   objectIdField: 'ObjectID', //重要！！！
+          //   renderer: heatmap, //渲染器
+          // });
+
+          const view = new MapView({
+            map: map,
+            center: [-118.805, 34.027], //Longitude, latitude
+            zoom: 13,
+            container: 'viewDiv',
+            popup: {
+              autoOpenEnabled: false,
+            },
+            highlightOptions: {
+              color: [205, 205, 0, 1],
+              //   haloOpacity: 0.9,
+              fillOpacity: 1,
+            },
+          });
+          let count = 1;
+          const graphicsLayer = new GraphicsLayer();
+
+          map.add(graphicsLayer);
+
+          //  view.on(
+          //    'click',
+          //    async (e) => {
+          //      const { results = [] } = await view.hitTest(e);
+          //      if (results.length <= 0) return; // 后续逻辑
+          //      console.log('result--->', results);
+          //    },
+          //    50
+          //  );
+          let pointObj = {
+            longitude: -118.806796597377,
+            latitude: 34.0215816298725,
+          };
+          console.log('view--->', view);
+          view.popup.autoOpenEnabled = false;
+          view.when(() => {
+            console.log('zzzzzzzz', view.popup);
+            view.popup.open({
+              // location: response.results[0].mapPoint,
+              // location: graphic.geometry.centroid,
+              location: new Point(pointObj),
+              // features: [graphic],
+              content: 'lsk',
+              // content:
+              //   '<span style="font-size:20px;color: blue"> lskkkkkkk </span>',
+            });
+          });
+          var highlight;
+          view.on(
+            'pointer-move',
+            _.debounce(function (event) {
+              event.stopPropagation();
+              event.preventDefault();
+              // view.popup.close();
+              view.hitTest(event).then(function (response) {
+                if (highlight) {
+                  highlight.remove();
+                  highlight = null;
+                }
+                console.log('zzzzzzzz', view.popup);
+                try {
+                  var graphic = response.results[0].graphic;
+                  var graphic1 = response.results[1].graphic;
+                  if (graphic && graphic.geometry.type === 'polygon') {
+                    console.log('graphic------>', count++, event, response);
+                    // popup.location = event.mapPoint;
+                    setTimeout(() => {
+                      view.popup.open({
+                        // location: response.results[0].mapPoint,
+                        // location: graphic.geometry.centroid,
+                        location: new Point(pointObj),
+                        features: [graphic],
+                        // content:
+                        //   '<span style="font-size:20px;color: blue"> lskkkkkkk </span>',
+                      });
+                    }, 50);
+
+                    // view.whenLayerView(graphic.layer).then((lyrView) => {
+                    //   try {
+                    //     console.log('event mapPoint------->', event.mapPoint);
+                    //     if (event.mapPoint) {
+                    //       view.popup.open({
+                    //         title: 'xxxxxxxx',
+                    //         location: event.mapPoint,
+                    //         content: '<p>lllllllllllllllll<p>',
+                    //       });
+                    //     }
+                    //     highlight = lyrView?.highlight(graphic);
+                    //   } catch (error) {
+
+                    //   }
+                    // });
+                  }
+                } catch (error) {
+                  // view.popup.close();
+                }
+              });
+            }, 100)
+          );
+
+          //  view.on('pointer-leave', (event) => {
+          //    highlight.remove();
+          //  });
+          view.on('pointer-leave', function (e) {
+            // view.popup.close();
+          });
+
+          const searchWidget = new Search({
+            view: view,
+          });
+
+          view.ui.add(searchWidget, {
+            position: 'bottom-left',
+          });
+
+          view.on('click', function (e) {
+            view.popup.close();
+          });
+
+          const circleGeometry = new Circle({
+            center: [-118.805, 34.027],
+            geodesic: true,
+            numberOfPoints: 100,
+            radius: 1,
+            radiusUnit: 'kilometers',
+            zIndex: 5,
+          });
+
+          // graphicsLayer.add(circleGeometry);
+
+          view.graphics.add(
+            new Graphic({
+              geometry: circleGeometry,
+              symbol: {
+                type: 'simple-fill',
+                // style: 'none',
+                index: 3,
+                color: 'blue',
+                outline: {
+                  width: 3,
+                  color: 'red',
+                },
+              },
+            })
+          );
+
+          const point = {
+            //Create a point
+            type: 'point',
+            longitude: -118.80657463861,
+            latitude: 34.0005930608889,
+          };
+          const simpleMarkerSymbol = {
+            type: 'simple-marker',
+            color: [226, 119, 40], // Orange
+            outline: {
+              color: [255, 255, 255], // White
+              width: 1,
+            },
+          };
+
+          const pointGraphic = new Graphic({
+            geometry: point,
+            symbol: simpleMarkerSymbol,
+          });
+
+          graphicsLayer.add(pointGraphic);
+
+          // Create a line geometry
+          const polyline = {
+            type: 'polyline',
+            paths: [
+              [-118.821527826096, 34.0139576938577], //Longitude, latitude
+              [-118.814893761649, 34.0080602407843], //Longitude, latitude
+              [-118.808878330345, 34.0016642996246], //Longitude, latitude
+            ],
+          };
+          const simpleLineSymbol = {
+            type: 'simple-line',
+            color: [226, 119, 40], // Orange
+            width: 3,
+            index: 6,
+            style: {},
+            outline: {
+              color: 'red',
+            },
+          };
+
+          const polylineGraphic = new Graphic({
+            geometry: polyline,
+            symbol: simpleLineSymbol,
+          });
+          graphicsLayer.add(polylineGraphic);
+
+          // Create a polygon geometry
+          const polygon = {
+            type: 'polygon',
+            rings: [
+              [-118.818984489994, 34.0137559967283], //Longitude, latitude
+              [-118.806796597377, 34.0215816298725], //Longitude, latitude
+              [-118.791432890735, 34.0163883241613], //Longitude, latitude
+              [-118.79596686535, 34.008564864635], //Longitude, latitude
+              [-118.808558110679, 34.0035027131376], //Longitude, latitude
+            ],
+          };
+
+          const polygon1 = {
+            type: 'polygon',
+            rings: [
+              [-118.898984489994, 34.0237559967283], //Longitude, latitude
+              [-118.856796597377, 34.0315816298725], //Longitude, latitude
+              [-118.791432890735, 34.0363883241613], //Longitude, latitude
+              [-118.80596686535, 34.009564864635], //Longitude, latitude
+              [-118.898558110679, 34.0335027131376], //Longitude, latitude
+            ],
+          };
+
+          const simpleFillSymbol = {
+            type: 'simple-fill',
+            cursor: 'pointer',
+            color: 'red', // [227, 139, 79, 0.8] Orange, opacity 80%
+            index: 6,
+            style: {
+              'z-index': 60,
+            },
+            outline: {
+              color: [255, 255, 255],
+              width: 1,
+            },
+          };
+
+          const popupTemplate = {
+            title: '{Name}',
+            content: '{Description}',
+          };
+
+          const attributes = {
+            Name: 'Graphic',
+            Description:
+              '<span style="font-size:16px;width:100%;text-align:center;background-color:white;padding: 0 10px">10086</span>',
+          };
+
+          const polygonGraphic = new Graphic({
+            geometry: polygon,
+            symbol: simpleFillSymbol,
+            attributes: attributes,
+            popupTemplate: popupTemplate,
+            zIndex: 10,
+          });
+          //  polygonGraphic.on('pointer-enter', function (res) {
+          //    console.log('res------>', res);
+          //  });
+
+          polygonGraphic.set('Index', 100);
+          console.log('-------->', polygonGraphic.zIndex);
+          const polygonGraphic1 = new Graphic({
+            geometry: polygon1,
+            symbol: simpleFillSymbol,
+          });
+          // graphicsLayer.add(polygonGraphic1);
+          graphicsLayer.add(polygonGraphic, { zIndex: 100 });
+          graphicsLayer.setIndex(polygonGraphic, 100);
+          addHeatMapLayer();
+        });
+
+        function addHeatMapLayer() {
+          var heatmap = {
+            //设置渲染器
+            type: 'heatmap',
+            colorStops: [
+              { ratio: 0.4, color: 'rgba(0, 255, 0, 0)' },
+              { ratio: 0.75, color: 'rgba(255, 140, 0, 1)' },
+              { ratio: 0.9, color: 'rgba(255, 0,   0, 1)' },
+            ],
+            blurRadius: 8,
+            maxPixelIntensity: 230,
+            minPixelIntensity: 10,
+          };
+          var heatDataUrl = 'data/heatmap.json';
+          // $.getJSON(heatDataUrl, {}, function (data, textStatus, jqXHR) {
+          //读取数据，设置点数据集
+          var features = [];
+          for (var i = 0; i < heatData.length; i++) {
+            var x = heatData[i].lng;
+            var y = heatData[i].lat;
+            features.push({
+              geometry: {
+                type: 'point',
+                x: x,
+                y: y,
+              },
+              attributes: {
+                ObjectID: i, //重要！！！
+              },
+            });
+          }
+
+          // var featureLayer = new FeatureLayer({
+          //   source: features, //点数据集
+          //   title: '热力图',
+          //   objectIdField: 'ObjectID', //重要！！！
+          //   renderer: heatmap, //渲染器
+          // });
+
+          // map.add(featureLayer);
+          // });
+        }
+      </script>
+    </head>
+    <body>
+      <div id="viewDiv"></div>
+    </body>
+  </html>
+</html>

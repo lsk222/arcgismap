@@ -1,0 +1,230 @@
+<!--
+
+To run this demo, you need to replace 'YOUR_API_KEY' with an API key from the ArcGIS Developers dashboard.
+
+Sign up for a free account and get an API key.
+
+https://developers.arcgis.com/documentation/mapping-apis-and-services/get-started/
+
+-->
+<html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <meta
+        name="viewport"
+        content="initial-scale=1, maximum-scale=1, user-scalable=no"
+      />
+      <title>v4- point-line-polygon</title>
+      <style>
+        html,
+        body,
+        #viewDiv {
+          padding: 0;
+          margin: 0;
+          height: 100%;
+          width: 100%;
+        }
+        .esri-popup__main-container {
+          width: fit-content;
+        }
+        .esri-popup--shadow {
+          box-shadow: none !important;
+        }
+        .esri-popup__main-container {
+          width: fit-content !important;
+          background-color: transparent !important;
+        }
+        .esri-popup__header {
+          visibility: hidden !important;
+          height: 0;
+          width: 0;
+          /* display: none !important; */
+        }
+        .esri-feature-content > div {
+          width: fit-content;
+        }
+        .esri-popup__footer {
+          visibility: hidden !important;
+          height: 0;
+          width: 0;
+          /* display: none !important; */
+        }
+        p,
+        span {
+          padding: 0;
+          margin: 0;
+          width: 0;
+          display: inline;
+        }
+        .esri-popup__pointer {
+          visibility: hidden !important;
+          height: 0;
+          width: 0;
+          /* display: none !important; */
+        }
+        .esri-popup__content {
+          padding: 0 !important;
+          margin: 0 !important;
+          width: fit-content !important;
+          background-color: rgba(43, 160, 49, 0.1) !important;
+        }
+        .esri-widget {
+          padding: 0 !important;
+          background-color: rgba(85, 15, 197, 0.1) !important;
+        }
+      </style>
+      <script src="https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+      <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+      <script src="./data/heatmap.js"></script>
+      <link
+        rel="stylesheet"
+        href="https://js.arcgis.com/4.24/esri/themes/light/main.css"
+      />
+      <script src="https://js.arcgis.com/4.24/"></script>
+      <script src="./streetNamePoint.js"></script>
+
+      <script>
+        let isHitTest = false;
+        const [polygonArr, pointArr] = handleGeoData();
+        const mapKey =
+          'AAPKf408f305d8e344aabadae3a285ade7cdZtjqhiJ9CXaLYfod0fBkDzgNxe7ZPHCr-OVBKprkZy9NMXzaoLyxbrR-d11MbjOb';
+        require([
+          'esri/config',
+          'esri/Map',
+          'esri/views/MapView',
+          'esri/geometry/Point',
+          'esri/geometry/Circle',
+          'esri/Graphic',
+          'esri/layers/GraphicsLayer',
+          'esri/layers/FeatureLayer',
+          'esri/layers/TileLayer',
+          'esri/Basemap',
+        ], (
+          esriConfig,
+          Map,
+          MapView,
+          Point,
+          Circle,
+          Graphic,
+          GraphicsLayer,
+          FeatureLayer,
+          TileLayer,
+          Basemap
+        ) => {
+          const draw2dPoint = (point) => {
+            let textArr = [];
+            point.forEach((item) => {
+              let textSymbol = {
+                type: 'text', // autocasts as new TextSymbol()
+                color: 'white',
+                text: item.label,
+                xoffset: 0,
+                yoffset: -3,
+                font: {
+                  size: 12,
+                },
+              };
+              let textPoint = {
+                type: 'point',
+                longitude: item.location[0],
+                latitude: item.location[1],
+              };
+              const textGraphic = new Graphic({
+                geometry: textPoint,
+                symbol: textSymbol,
+              });
+
+              textArr.push(textGraphic);
+            });
+            view.graphics.addMany(textArr);
+          };
+
+          const drawPolygons = async (data) => {
+            console.log('data--->', data);
+            const polyg = [];
+            const polygonD = [];
+            const simpleFillSymbol = {
+              type: 'simple-fill',
+              cursor: 'pointer',
+              color: 'rgba(227, 139, 79, 1)', // [227, 139, 79, 0.8] Orange, opacity 80%
+              outline: {
+                color: [255, 255, 255],
+                width: 1,
+              },
+            };
+            for (let i = 0; i < data.length; i += 1) {
+              if (data[i].type === 'MultiPolygon') {
+                for (let j = 0; j < data[i].location.length; j++) {
+                  const plg = {
+                    attributes: data[i].extData ? data[i].extData : null,
+                    type: 'polygon',
+                    rings: data[i].location[j],
+                  };
+                  const polygonGraphic = new Graphic({
+                    geometry: plg,
+                    symbol: simpleFillSymbol,
+                    attributes: data[i].extData ? data[i].extData : null,
+                  });
+
+                  polyg.push(polygonGraphic);
+                  polygonD.push(polygonGraphic);
+                }
+                continue;
+              }
+
+              const polygon = {
+                type: 'polygon',
+                rings: data[i].location,
+              };
+
+              const polygonGraphic = new Graphic({
+                geometry: polygon,
+                symbol: simpleFillSymbol,
+              });
+              polygonD.push(polygonGraphic);
+              polyg.push(polygonGraphic);
+            }
+            console.log('polyg--->', polyg);
+            view.graphics.addMany(polyg);
+            // map.add(polyg);
+          };
+
+          var basemaplayer = new TileLayer({
+            url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer',
+          });
+
+          let customBasemap = new Basemap({
+            baseLayers: [basemaplayer],
+            title: 'Custom Basemap',
+            id: 'myBasemap',
+          });
+
+          const map = new Map({
+            basemap: customBasemap, //Basemap layer service
+          });
+
+          const view = new MapView({
+            map: map,
+            center: [121.657433, 29.722247], //Longitude, latitude
+            zoom: 11,
+            container: 'viewDiv',
+            popup: {
+              autoOpenEnabled: false,
+            },
+            highlightOptions: {
+              color: [205, 205, 0, 1],
+              //   haloOpacity: 0.9,
+              fillOpacity: 1,
+            },
+          });
+          drawPolygons(polygonArr);
+          draw2dPoint(pointArr);
+        });
+      </script>
+    </head>
+    <body>
+      <div id="viewDiv"></div>
+    </body>
+  </html>
+</html>
